@@ -36,7 +36,7 @@ var axisY = d3.axisLeft()
 //Line generator
 var lineGenerator = d3.line()
     .x(function(d){ return scaleX(new Date(d.key)); })
-    .y(function(d){ return scaleY(new Date(d.averagePrice)); })
+    .y(function(d){ return scaleY(d.averagePrice); })
     .curve(d3.curveCardinal);
 
 d3.queue()
@@ -89,7 +89,7 @@ d3.queue()
 function draw(rows){
     //IMPORTANT: data transformation
 
-    var test = rows.sort(function(a, b){
+    var sortedRows = rows.sort(function(a, b){
         return (a.travelDate - b.travelDate);
     });
 
@@ -104,7 +104,8 @@ function draw(rows){
     // why i couldn't sort my new array???
 
     // console.log(flightsByTravelDate);
-    // console.log(rows);
+    console.log(rows);
+    console.log(flightsByTravelDate);
 
     //Draw dots
     //UPDATE
@@ -118,8 +119,41 @@ function draw(rows){
         .attr('r', 0)
         .attr('cx',function(d){ return scaleX(d.travelDate); })
         .attr('cy', function(d){ return scaleY(d.price); })
-        .style('fill', function(d) { return scaleColor(d.airline); });
-        //mouse events go here...
+        .style('fill', function(d) { return scaleColor(d.airline); })
+
+        // .on('click',function(d,i){
+        //     console.log(d.travelDate.getFullYear());
+        // })
+        
+        .on('mouseenter', function(d){
+            var tooltip = d3.select('.custom-tooltip'),
+                year    = d.travelDate.getFullYear(),
+                month   = (1 + d.travelDate.getMonth()),
+                day     = (1 + d.travelDate.getDay());
+
+            tooltip.select('.title')
+                .html(d.airline + ', ' + day + '/' + month + '/' + year);
+            tooltip.select('.value')
+                .html('Price: ' + d.price);
+
+            tooltip.transition().style('opacity',1);
+            d3.select(this).style('stroke-width','3px');
+        })
+
+        .on('mousemove',function(d){
+            var tooltip = d3.select('.custom-tooltip');
+            var xy = d3.mouse( d3.select('.container').node() );
+            tooltip
+                .style('left',xy[0]+10+'px')
+                .style('top',xy[1]+10+'px');
+
+        })
+        .on('mouseleave',function(d){
+            var tooltip = d3.select('.custom-tooltip');
+            tooltip.transition().style('opacity',0);
+
+            d3.select(this).style('stroke-width','0px');
+        });
         
     //UPDATE + ENTER
     enter
